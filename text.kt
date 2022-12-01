@@ -6,7 +6,7 @@ class s
     {
 
     }
-    fun test()
+    fun test(a:Int , b:Int)
     {
 
     }

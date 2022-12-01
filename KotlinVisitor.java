@@ -37,26 +37,43 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 
     @Override
     public String visitFunctionValueParameters(KotlinParser.FunctionValueParametersContext ctx) {
-        return "()";
+        String functionparameters = "";
+        int parametersLength = ctx.functionValueParameter().size()-1;
+        for (KotlinParser.FunctionValueParameterContext ct : ctx.functionValueParameter())
+        {
+            if(ct != ctx.functionValueParameter().get(parametersLength))
+            {
+                functionparameters += (visitFunctionValueParameter(ct)) +" , ";
+            }
+            else functionparameters += (visitFunctionValueParameter(ct));
+
+        }
+        return "(" + functionparameters +")";
     }
 
+    @Override
+    public String visitParameter(KotlinParser.ParameterContext ctx) {
+        return (visitSimpleIdentifier(ctx.simpleIdentifier()) + ": " + visitType_(ctx.type_()));
+    }
 
     @Override
     public String visitBlock(KotlinParser.BlockContext ctx) {
         return ("{\n" + visitStatements(ctx.statements()) + "\n}\n");
     }
 
-   /* @Override
+
+     @Override
     public String visitStatements(KotlinParser.StatementsContext ctx) {
-        String statements = "";
+      /*  String statements = "";
         for (KotlinParser.StatementContext ct : ctx.statement())
         {
             statements += (visitStatement(ct));
         }
-        return statements;
+        return statements;*/
+         return "no statements yet";
     }
 
-    @Override
+ /*   @Override
     public String visitStatement(KotlinParser.StatementContext ctx) {
         return super.visitStatement(ctx);
     }*/
