@@ -30,8 +30,13 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 
     @Override
     public String visitFunctionDeclaration(KotlinParser.FunctionDeclarationContext ctx) {
-       return ("func " + visitSimpleIdentifier(ctx.simpleIdentifier())
-                + visitFunctionValueParameters(ctx.functionValueParameters())
+        String returntype = "";
+        if(ctx.type_() != null)
+        {
+            returntype =" -> " + visitType_(ctx.type_());
+        }
+        return ("func " + visitSimpleIdentifier(ctx.simpleIdentifier())
+                + visitFunctionValueParameters(ctx.functionValueParameters()) + returntype
                 + "\n" + visitFunctionBody(ctx.functionBody()));
     }
 
@@ -85,7 +90,7 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 
     @Override
     public String visitClassBody(KotlinParser.ClassBodyContext ctx) {
-        return ("{\n" + visitClassMemberDeclarations(ctx.classMemberDeclarations()) + "\n}");
+        return ("{\n" + visitClassMemberDeclarations(ctx.classMemberDeclarations()) + "\n}\n");
     }
 
     @Override

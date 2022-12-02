@@ -6,9 +6,9 @@ class s
     {
 
     }
-    fun test(a:Int , b:Int)
+    fun test(a:Int , b:Int) : Int
     {
-
+        return 1;
     }
 }
 class w
