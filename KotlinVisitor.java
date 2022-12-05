@@ -1,4 +1,5 @@
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
+import javax.swing.plaf.nimbus.State;
 
 public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 {
@@ -14,13 +15,13 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
     @Override
     public String visitPackageHeader(KotlinParser.PackageHeaderContext ctx) {
         //return super.visitPackageHeader(ctx);
-        return "no package header yet\n";
+        return "//no package header yet\n";
     }
 
     @Override
     public String visitImportList(KotlinParser.ImportListContext ctx) {
         //return super.visitImportList(ctx);
-        return "no imports yet\n";
+        return "//no imports yet\n";
     }
 
     @Override
@@ -63,25 +64,24 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 
     @Override
     public String visitBlock(KotlinParser.BlockContext ctx) {
-        return ("{\n" + visitStatements(ctx.statements()) + "\n}\n");
+        return ("{\n\n" + visitStatements(ctx.statements()) + "\n}\n");
     }
 
 
      @Override
     public String visitStatements(KotlinParser.StatementsContext ctx) {
-      /*  String statements = "";
+        String statements = "";
         for (KotlinParser.StatementContext ct : ctx.statement())
         {
-            statements += (visitStatement(ct));
+            statements += (visitStatement(ct)) + "\n";
         }
-        return statements;*/
-         return "no statements yet";
+        return statements;
     }
 
- /*   @Override
+    @Override
     public String visitStatement(KotlinParser.StatementContext ctx) {
         return super.visitStatement(ctx);
-    }*/
+    }
 
     @Override
     public String visitClassDeclaration(KotlinParser.ClassDeclarationContext ctx) {
@@ -90,7 +90,7 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 
     @Override
     public String visitClassBody(KotlinParser.ClassBodyContext ctx) {
-        return ("{\n" + visitClassMemberDeclarations(ctx.classMemberDeclarations()) + "\n}\n");
+        return ("{\n\n" + visitClassMemberDeclarations(ctx.classMemberDeclarations()) + "\n}\n");
     }
 
     @Override
@@ -110,13 +110,85 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 
     @Override
     public String visitPropertyDeclaration(KotlinParser.PropertyDeclarationContext ctx) {
-        return ("var " + visitVariableDeclaration(ctx.variableDeclaration()) + "= "
+        return ("var " + visitVariableDeclaration(ctx.variableDeclaration()) + ctx.ASSIGNMENT().getText() + " "
                 + visitExpression(ctx.expression()) +"\n");
     }
 
     @Override
+    public String visitAssignment(KotlinParser.AssignmentContext ctx) {
+        return (visitDirectlyAssignableExpression(ctx.directlyAssignableExpression()) + ctx.ASSIGNMENT().getText() + " " +
+                visitExpression(ctx.expression()));
+    }
+
+    @Override
+    public String visitAdditiveExpression(KotlinParser.AdditiveExpressionContext ctx) {
+
+        if(ctx.children.size() > 1)
+        {
+            String Statement = "";
+            int statementsLenght = ctx.multiplicativeExpression().size() - 1;
+            int i = 0;
+            for (KotlinParser.MultiplicativeExpressionContext ct : ctx.multiplicativeExpression())
+            {
+                if(ct != ctx.multiplicativeExpression().get(statementsLenght))
+                {
+                    Statement += (visitMultiplicativeExpression(ct)) + visitAdditiveOperator(ctx.additiveOperator(i));
+                    i++;
+                }
+                else Statement += (visitMultiplicativeExpression(ct));
+            }
+            return Statement;
+        }
+        else {return super.visitAdditiveExpression(ctx);}
+    }
+
+    @Override
+    public String visitMultiplicativeExpression(KotlinParser.MultiplicativeExpressionContext ctx) {
+
+        if(ctx.children.size() > 1)
+        {
+            String Statement = "";
+            int statementsLenght = ctx.asExpression().size() - 1;
+            int i = 0;
+            for (KotlinParser.AsExpressionContext ct : ctx.asExpression())
+            {
+                if(ct != ctx.asExpression().get(statementsLenght))
+                {
+                    Statement += visitAsExpression(ct) + visitMultiplicativeOperator(ctx.multiplicativeOperator(i));
+                    i++;
+                }
+                else Statement += (visitAsExpression(ct));
+            }
+            return Statement;
+        }
+        else {return super.visitMultiplicativeExpression(ctx);}
+
+    }
+
+    @Override
+    public String visitJumpExpression(KotlinParser.JumpExpressionContext ctx) {
+        return ctx.RETURN().getText() + " " + visitExpression(ctx.expression());
+    }
+
+    @Override
+    public String visitAdditiveOperator(KotlinParser.AdditiveOperatorContext ctx) {
+        String myout = "";
+        if(ctx.ADD()!= null) {myout = "+ ";}
+        else{myout = "- ";}
+        return myout;
+    }
+
+    @Override
+    public String visitMultiplicativeOperator(KotlinParser.MultiplicativeOperatorContext ctx) {
+        String myout = "";
+        if(ctx.MULT()!= null) {myout = "* ";}
+        else{myout = "/ ";}
+        return myout;
+    }
+
+    @Override
     public String visitLiteralConstant(KotlinParser.LiteralConstantContext ctx) {
-        return (ctx.IntegerLiteral().getText());
+        return (ctx.IntegerLiteral().getText() + " ");
     }
 
     @Override
