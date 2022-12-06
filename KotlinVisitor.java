@@ -166,8 +166,106 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
     }
 
     @Override
+    public String visitIfExpression(KotlinParser.IfExpressionContext ctx) {
+        if(ctx.children.size() > 1)
+        {
+            if(ctx.ELSE() != null)
+            {
+                return ("if (" + visitExpression(ctx.expression()) + " )\n"
+                        + visitControlStructureBody(ctx.controlStructureBody(0)) + "\nelse\n"
+                        + visitControlStructureBody(ctx.controlStructureBody(1)) );
+            }
+            else
+            {
+                return ("if (" + visitExpression(ctx.expression()) + " )\n"
+                        + visitControlStructureBody(ctx.controlStructureBody(0)) );
+            }
+
+        }
+        else {return super.visitIfExpression(ctx);}
+    }
+
+    @Override
+    public String visitDisjunction(KotlinParser.DisjunctionContext ctx) {
+        if(ctx.children.size() > 1)
+        {
+            String Statement = "";
+            int statementsLenght = ctx.conjunction().size() - 1;
+            for (KotlinParser.ConjunctionContext ct : ctx.conjunction())
+            {
+                if(ct != ctx.conjunction().get(statementsLenght))
+                {
+                    Statement += visitConjunction(ct) + " || ";
+                }
+                else {Statement += visitConjunction(ct);}
+            }
+            return Statement;
+        }
+        else{return super.visitDisjunction(ctx);}
+    }
+
+    @Override
+    public String visitConjunction(KotlinParser.ConjunctionContext ctx) {
+        if(ctx.children.size() > 1)
+        {
+            String Statement = "";
+            int statementsLenght = ctx.equality().size() - 1;
+            for (KotlinParser.EqualityContext ct : ctx.equality())
+            {
+                if(ct != ctx.equality().get(statementsLenght))
+                {
+                    Statement += visitEquality(ct) + " && ";
+                }
+                else {Statement += visitEquality(ct);}
+            }
+            return Statement;
+        }
+        else{return super.visitConjunction(ctx);}
+    }
+
+    @Override
+    public String visitEquality(KotlinParser.EqualityContext ctx) {
+        if(ctx.children.size() > 1)
+        {
+            return (visitComparison(ctx.comparison(0)) + " " + visitEqualityOperator(ctx.equalityOperator(0))
+                    + " " + visitComparison(ctx.comparison(1)));
+        }
+        else{ return super.visitEquality(ctx);}
+    }
+
+    @Override
+    public String visitComparison(KotlinParser.ComparisonContext ctx) {
+        if(ctx.children.size() > 1)
+        {
+            return (visitInfixOperation(ctx.infixOperation(0)) + " " + visitComparisonOperator(ctx.comparisonOperator())
+                    + " " + visitInfixOperation(ctx.infixOperation(1)));
+        }
+        else{ return super.visitComparison(ctx);}
+    }
+
+    @Override
     public String visitJumpExpression(KotlinParser.JumpExpressionContext ctx) {
         return ctx.RETURN().getText() + " " + visitExpression(ctx.expression());
+    }
+
+    @Override
+    public String visitEqualityOperator(KotlinParser.EqualityOperatorContext ctx) {
+        String myout = "";
+        if(ctx.EXCL_EQ() != null) { myout =  "!=";}
+        else if (ctx.EXCL_EQEQ() != null) {myout =  "!==";}
+        else if (ctx.EQEQ() != null) {myout =  "==";}
+        else {myout =  "===";}
+        return myout;
+    }
+
+    @Override
+    public String visitComparisonOperator(KotlinParser.ComparisonOperatorContext ctx) {
+        String myout = "";
+        if(ctx.LANGLE() != null) { myout =  "<";}
+        else if (ctx.LE() != null) {myout =  "<=";}
+        else if (ctx.RANGLE() != null) {myout =  ">";}
+        else {myout =  ">=";}
+        return myout;
     }
 
     @Override
