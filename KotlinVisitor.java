@@ -78,10 +78,6 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
         return statements;
     }
 
-    @Override
-    public String visitStatement(KotlinParser.StatementContext ctx) {
-        return super.visitStatement(ctx);
-    }
 
     @Override
     public String visitClassDeclaration(KotlinParser.ClassDeclarationContext ctx) {
@@ -110,7 +106,10 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
 
     @Override
     public String visitPropertyDeclaration(KotlinParser.PropertyDeclarationContext ctx) {
-        return ("var " + visitVariableDeclaration(ctx.variableDeclaration()) + ctx.ASSIGNMENT().getText() + " "
+        String myV = "";
+        if(ctx.VAR() != null){myV = "var";}
+        else{myV = "let";}
+        return (myV + " " + visitVariableDeclaration(ctx.variableDeclaration()) + ctx.ASSIGNMENT().getText() + " "
                 + visitExpression(ctx.expression()) +"\n");
     }
 
@@ -186,6 +185,53 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
     }
 
     @Override
+    public String visitForStatement(KotlinParser.ForStatementContext ctx) {
+        return ("for ( " + visitVariableDeclaration(ctx.variableDeclaration()) + " in " + visitExpression(ctx.expression()) + ")\n"
+        + visitControlStructureBody(ctx.controlStructureBody()));
+    }
+
+    @Override
+    public String visitWhileStatement(KotlinParser.WhileStatementContext ctx) {
+        return ("while ( " + visitExpression(ctx.expression()) +" )\n" + visitControlStructureBody(ctx.controlStructureBody()));
+    }
+
+    @Override
+    public String visitDoWhileStatement(KotlinParser.DoWhileStatementContext ctx) {
+        return ("repeat \n" +visitControlStructureBody(ctx.controlStructureBody())
+                + "while ( " + visitExpression(ctx.expression()) + " )\n" );
+    }
+
+    @Override
+    public String visitWhenExpression(KotlinParser.WhenExpressionContext ctx) {
+        String entries = "";
+        for(KotlinParser.WhenEntryContext ct : ctx.whenEntry())
+        {
+            entries += visitWhenEntry(ct) + "\n";
+        }
+        return("switch ( " + visitExpression(ctx.expression()) + " )" + "\n{\n" + entries + "}\n");
+    }
+
+    @Override
+    public String visitWhenEntry(KotlinParser.WhenEntryContext ctx) {
+        if(ctx.ELSE() != null)
+        {
+            return ("default" + ":\n" + visitControlStructureBody(ctx.controlStructureBody()));
+        }
+        String conditions = "";
+        int conditionsSize =  ctx.whenCondition().size() - 1;
+        for(KotlinParser.WhenConditionContext ct : ctx.whenCondition())
+        {
+            if(ct != ctx.whenCondition(conditionsSize))
+            {
+                conditions += visitWhenCondition(ct) + " , ";
+            }
+            else {conditions += visitWhenCondition(ct);}
+
+        }
+        return ("case " +conditions + ":\n" + visitControlStructureBody(ctx.controlStructureBody()));
+    }
+
+    @Override
     public String visitDisjunction(KotlinParser.DisjunctionContext ctx) {
         if(ctx.children.size() > 1)
         {
@@ -244,8 +290,55 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
     }
 
     @Override
+    public String visitPostfixUnaryExpression(KotlinParser.PostfixUnaryExpressionContext ctx) {
+        String postfixsuffix = "";
+        for (KotlinParser.PostfixUnarySuffixContext ct : ctx.postfixUnarySuffix())
+        {
+            postfixsuffix += visitPostfixUnarySuffix(ct);
+        }
+        return (visitPrimaryExpression(ctx.primaryExpression()) + " " + postfixsuffix);
+    }
+
+    @Override
+    public String visitTypeArguments(KotlinParser.TypeArgumentsContext ctx) {
+        String types = "";
+        int typesSize = ctx.typeProjection().size() - 1;
+        for (KotlinParser.TypeProjectionContext ct : ctx.typeProjection())
+        {
+            if(ct != ctx.typeProjection(typesSize))
+            {
+                types += visitTypeProjection(ct) + ",";
+            }
+           else {types += visitTypeProjection(ct);}
+        }
+        return ("< " + types + " >");
+    }
+
+    @Override
+    public String visitValueArguments(KotlinParser.ValueArgumentsContext ctx) {
+        String values = "";
+        int typesSize = ctx.valueArgument().size() - 1;
+        for (KotlinParser.ValueArgumentContext ct : ctx.valueArgument())
+        {
+            if(ct != ctx.valueArgument(typesSize))
+            {
+                values += visitValueArgument(ct) + ", ";
+            }
+            else {values += visitValueArgument(ct);}
+        }
+        return ("( " + values + " )");
+    }
+
+    @Override
+    public String visitCallSuffix(KotlinParser.CallSuffixContext ctx) {
+        return super.visitCallSuffix(ctx);
+    }
+
+    @Override
     public String visitJumpExpression(KotlinParser.JumpExpressionContext ctx) {
-        return ctx.RETURN().getText() + " " + visitExpression(ctx.expression());
+        if(ctx.CONTINUE() != null){return  "continue";}
+        else if(ctx.BREAK() != null) {return "break";}
+        else{return ctx.RETURN().getText() + " " + visitExpression(ctx.expression());}
     }
 
     @Override
@@ -280,7 +373,8 @@ public class KotlinVisitor extends KotlinParserBaseVisitor<String>
     public String visitMultiplicativeOperator(KotlinParser.MultiplicativeOperatorContext ctx) {
         String myout = "";
         if(ctx.MULT()!= null) {myout = "* ";}
-        else{myout = "/ ";}
+        else if (ctx.MOD() != null){myout = "% ";}
+        else {myout = "/ ";}
         return myout;
     }
 

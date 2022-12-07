@@ -11,7 +11,7 @@ public class Main
     {
         File myswiftout = new File("./src/out.swift");
         myswiftout.createNewFile();
-        CharStream in = CharStreams.fromFileName("./src/text.kt");
+        CharStream in = CharStreams.fromFileName("./src/text5.kt");
         KotlinLexer lexer = new KotlinLexer(in);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         KotlinParser parser = new KotlinParser(tokens);
